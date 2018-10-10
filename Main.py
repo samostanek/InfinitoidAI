@@ -48,22 +48,19 @@ class Basic:
     dmg = 10
     atspd = 5
     rtspd = 90
+    rtangl = 0
     prspd = 4
 
     @staticmethod
-    def shot(enemy, cell):
+    def enemy_angle(enemy, cell):
         dx = cell.pos[0] - enemy.get_pos(road_g)[0]
-        print("dx:", dx)
         dy = cell.pos[1] - enemy.get_pos(road_g)[1]
-        print("dy:", dy)
         if dx == 0:
-            print("atan = none")
             if dy > 0:
                 return 270
             else:
                 return 90
         atan = math.degrees(math.atan(dy/dx))
-        print("atan: ", atan)
         if dx < 0:
             if atan < 0:
                 return 360 + atan
@@ -71,6 +68,20 @@ class Basic:
                 return atan
         else:
             return 180 + atan
+
+    def rtt(self, enangl):      # TODO: Optimalizuj
+        if self.rtangl > enangl:
+            if self.rtangl - enangl > 180:
+                return 360 - (self.rtangl - enangl)
+            else:
+                return enangl - self.rtangl
+        elif self.rtangl == enangl:
+            return 0
+        else:
+            if self.rtangl - enangl < -180:
+                return 360 + self.rtangl - enangl
+            else:
+                return self.rtangl - enangl
 
 
 class Bullet:
@@ -100,5 +111,5 @@ e = Regular()
 for i in range(0, 15):
     e.pos = i
     print(e. get_pos(road_g))
-    print(c.tower.shot(e, c))
+    print(c.tower.rtt(Basic.enemy_angle(e, c)))
     print("")
