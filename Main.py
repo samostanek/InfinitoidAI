@@ -1,7 +1,7 @@
 import math
 
 coins = 200
-road_g = [[5, 3], [7, 3], [7, 5], [7, 7], [5, 7], [3, 7], [3, 5], [3, 3]]
+road_g = [[5, 3], [7, 3], [7, 5], [7, 7], [5, 7], [3, 7], [3, 5], [3, 3], [5, 3]]
 cells = []
 
 
@@ -17,7 +17,7 @@ class Enemy:
         whole = math.floor(half)
         if road[whole][1] == road[whole + 1][1]:
             if road[whole][0] < road[whole + 1][0]:
-                return [road[whole][0] + (self.pos - 2*whole),    # Ak to nepojde asi je chýba tu
+                return [road[whole][0] + (self.pos - 2*whole),    # Ak to nepojde asi je chyba tu
                         road[whole][1]]
             else:
                 return [road[whole][0] - (self.pos - 2*whole),
@@ -53,20 +53,24 @@ class Basic:
     @staticmethod
     def shot(enemy, cell):
         dx = cell.pos[0] - enemy.get_pos(road_g)[0]
+        print("dx:", dx)
         dy = cell.pos[1] - enemy.get_pos(road_g)[1]
+        print("dy:", dy)
         if dx == 0:
-            if dy < 0:
+            print("atan = none")
+            if dy > 0:
                 return 270
             else:
                 return 90
-        atan = math.atan(dy/dx)
-        if dx <= 0:
+        atan = math.degrees(math.atan(dy/dx))
+        print("atan: ", atan)
+        if dx < 0:
             if atan < 0:
                 return 360 + atan
             else:
                 return atan
         else:
-            return 180 - atan
+            return 180 + atan
 
 
 class Bullet:
@@ -92,7 +96,9 @@ for i in range(1, 6):
 c = Cell([5, 5])
 c.tower = Basic()
 e = Regular()
-print(e.get_pos(road_g))
+
 for i in range(0, 15):
     e.pos = i
+    print(e. get_pos(road_g))
     print(c.tower.shot(e, c))
+    print("")
