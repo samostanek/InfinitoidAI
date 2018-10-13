@@ -104,7 +104,7 @@ class Basic(Tower):        # Tower in cell
         Tower.__init__(self, self)
 
     def rtt(self, enangl):      # Tower-enemy rotate Δ function  TODO: Optimalizuj a nevadilo by to aj opravit
-        if self.rtangl > enangl:    # If angle to enemy is higher than tower's
+        if self.rtangl < enangl:    # If angle to enemy is higher than tower's
             if self.rtangl - enangl > 180:
                 return 360 - (self.rtangl - enangl)
             else:
@@ -149,6 +149,7 @@ print('')
 i = 0
 while not e.effects:
     print('Tower angle: ', c.tower.rtangl)
+    print('Need to rotate: ', c.tower.rtt(e.enemy_angle(c)))
     c.tower.rotate_and_shoot(c.tower.rtt(e.enemy_angle(c)), c, e)
     i += 1
 print('Succesfully shooted')
