@@ -59,7 +59,6 @@ class Enemy:        # Parent for enemy type classes
         for effect in self.effects:
             effect.update(self)
 
-
 class Regular(Enemy):
     def __init__(self):
         Enemy.__init__(self, 100, 1)
@@ -77,7 +76,7 @@ class Tower:
         self.child = child
 
     def shoot(self, enemy, cell):
-        enemy.addeff(Bullet(self.child.dmg, (math.sqrt(cell.pos[0] - enemy.get_pos(road_g)[0])**2 + (cell.pos[1] - enemy.get_pos(road_g)[1])**2)/self.child.prspd), enemy)
+        enemy.addeff(Bullet(self.child.dmg, (math.sqrt((cell.pos[0] - enemy.get_pos(road_g)[0])**2 + (cell.pos[1] - enemy.get_pos(road_g)[1])**2)/self.child.prspd), enemy))
 
     def rotate_and_shoot(self, angl, enemy, cell):     # Rotate tower by given amount
         if math.fabs(angl) < self.child.rtspd / tickrate:   # If angl is less than tick rotation speed
@@ -150,7 +149,7 @@ i = 0
 while not e.effects:
     print('Tower angle: ', c.tower.rtangl)
     print('Need to rotate: ', c.tower.rtt(e.enemy_angle(c)))
-    c.tower.rotate_and_shoot(c.tower.rtt(e.enemy_angle(c)), c, e)
+    c.tower.rotate_and_shoot(c.tower.rtt(e.enemy_angle(c)), e, c)
     i += 1
 print('Succesfully shooted')
 print('Iterations: ', i)
