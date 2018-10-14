@@ -34,6 +34,7 @@ class Enemy:        # Parent for enemy type classes
 
     def enemy_angle(self, cell):       # Get enemy angle from 0 relative to tower
         print(cell.pos[0], cell.pos[1])
+        # Compute position differences
         dx = cell.pos[0] - self.get_pos(road_g)[0]
         dy = -(cell.pos[1] - self.get_pos(road_g)[1])
         print(dx, dy)
@@ -58,6 +59,7 @@ class Enemy:        # Parent for enemy type classes
     def update(self):
         for effect in self.effects:
             effect.update(self)
+
 
 class Regular(Enemy):
     def __init__(self):
@@ -102,7 +104,7 @@ class Basic(Tower):        # Tower in cell
     def __init__(self):
         Tower.__init__(self, self)
 
-    def rtt(self, enangl):      # Tower-enemy rotate Δ function  TODO: Optimalizuj a nevadilo by to aj opravit
+    def rtt(self, enangl):      # Tower-enemy rotate Δ function  TODO: Optimalizuj
         if self.rtangl < enangl:    # If angle to enemy is higher than tower's
             if self.rtangl - enangl > 180:
                 return 360 - (self.rtangl - enangl)
