@@ -3,6 +3,7 @@ import math
 coins = 200
 road_g = [[5, 3], [7, 3], [7, 5], [7, 7], [5, 7], [3, 7], [3, 5], [3, 3], [5, 3]]
 cells = []
+waves = []
 tickrate: int = 100
 
 
@@ -33,18 +34,15 @@ class Enemy:        # Parent for enemy type classes
                         road[whole][1] - (self.pos - 2*whole)]
 
     def enemy_angle(self, cell):       # Get enemy angle from 0 relative to tower
-        print(cell.pos[0], cell.pos[1])
         # Compute position differences
         dx = cell.pos[0] - self.get_pos(road_g)[0]
         dy = -(cell.pos[1] - self.get_pos(road_g)[1])
-        print(dx, dy)
         if dx == 0:
             if dy > 0:
                 return 270
             else:
                 return 90
         atan = math.degrees(math.atan(dy/dx))
-        print(atan)
         if dx < 0:
             if atan < 0:
                 return 360 - atan
@@ -54,19 +52,26 @@ class Enemy:        # Parent for enemy type classes
             return 180 + atan
 
     def addeff(self, effect):
+        # Function for addition of effects
         self.effects.append(effect)
 
     def update(self):
+        # Update for effects
+        j = 0
         for effect in self.effects:
-            effect.update(self)
+            if effect.update(self):
+                del self.effects[j]
+        j += 1
 
 
 class Regular(Enemy):
+    # Regular enemy has 100 hp and 1 speed
     def __init__(self):
         Enemy.__init__(self, 100, 1)
 
 
 class Cell:
+    # Class for place, where tower can stand
     def __init__(self, pos, upgrades=0):
         self.pos = pos
         self.upgrades = upgrades
@@ -82,14 +87,13 @@ class Tower:
 
     def rotate_and_shoot(self, angl, enemy, cell):     # Rotate tower by given amount
         if math.fabs(angl) < self.child.rtspd / tickrate:   # If angl is less than tick rotation speed
-            self.child.rtangl += angl
-            self.shoot(enemy, cell)
+            self.child.rtangl += angl   # Rotate rest of the way
+            self.shoot(enemy, cell) # Shoot the enemy
         else:
-            if angl == 0:
+            if angl == 0:   # Raise exception if angle to rotate is 0
                 raise ValueError('Rotation Δ zero!')
                 pass
             # Else if angl is positive, rotate by max speed to + else to -
-            # print(angl)
             self.child.rtangl += self.child.rtspd / tickrate if angl > 0 else -(self.child.rtspd / tickrate)
 
 
@@ -119,7 +123,7 @@ class Basic(Tower):        # Tower in cell
                 return self.rtangl - enangl
 
 
-class Bullet:                   # Bullet effect for shots
+class Bullet:                   # Bullet effect for shots   # TODO: Make parent class
     def __init__(self, dmg, t, host):
         # Duration input in secs converted to ticks
         self.dmg = dmg
@@ -127,31 +131,22 @@ class Bullet:                   # Bullet effect for shots
         self.host = host        # Enemy object, on which effect is applied
 
     def update(self):
-        self.t -= 1
-        if self.t <= 0:
-            self.host.hp -= self.dmg
+        self.t -= 1     # Lower remaining time of effect
+        if self.t <= 0:     # If time has passed
+            self.host.hp -= self.dmg    # Execute effect's effect
+            # Return True if Bullet needs to be deleted
             return True
         return False
-    # Return True if Bullet needs to be deleted
 
 
 for i in range(1, 6):
     cells.append(Cell([1, 2*i+1]))
     cells.append(Cell([5, 2*i + 2]))
 
+def update():
+    for wave in waves:
 
 c = Cell([5, 5])
 c.tower = Basic()
 e = Regular()
 e.pos = 1
-print('Enemy pos: ', e.get_pos(road_g))
-print('Enemy angle: ', e.enemy_angle(c))
-print('')
-i = 0
-while not e.effects:
-    print('Tower angle: ', c.tower.rtangl)
-    print('Need to rotate: ', c.tower.rtt(e.enemy_angle(c)))
-    c.tower.rotate_and_shoot(c.tower.rtt(e.enemy_angle(c)), e, c)
-    i += 1
-print('Succesfully shooted')
-print('Iterations: ', i)
