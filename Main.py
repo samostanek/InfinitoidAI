@@ -2,9 +2,9 @@ import math
 
 coins = 200
 road_g = [[5, 3], [7, 3], [7, 5], [7, 7], [5, 7], [3, 7], [3, 5], [3, 3], [5, 3]]
-cells = []
-waves = []
+waves_g = []
 tickrate: int = 100
+
 
 class Wave:
     def __init__(self, enemies, number):
@@ -115,6 +115,20 @@ class Tower:
             # Else if angl is positive, rotate by max speed to + else to -
             self.child.rtangl += self.child.rtspd / tickrate if angl > 0 else -(self.child.rtspd / tickrate)
 
+    def rta(self, enangl):      # Tower-enemy rotate Δ function  TODO: Optimalizuj
+        if self.child.rtangl < enangl:    # If angle to enemy is higher than tower's
+            if self.child.rtangl - enangl > 180:
+                return 360 - (self.child.rtangl - enangl)
+            else:
+                return enangl - self.child.rtangl
+        elif self.child.rtangl == enangl:     # Else if they are the same, return 0
+            return 0
+        else:   # Else tower's angle is higher than to enemy
+            if self.child.rtangl - enangl < -180:
+                return 360 + self.child.rtangl - enangl
+            else:
+                return self.child.rtangl - enangl
+
     def in_range(self, enemy):
         return self.dist(enemy) <= self.child.rng
 
@@ -122,7 +136,7 @@ class Tower:
         target = Regular(10000)
         for wave in waves:
             for enemy in wave.enemies:
-                if self.in_range(enemy) and  enemy.wave_rank < target.wave_rank:
+                if self.in_range(enemy) and enemy.wave_rank < target.wave_rank:
                     target = enemy
 
 
@@ -149,35 +163,21 @@ class Cell:
         self.tower = Basic(self)
 
 
-    def __init__(self, cell):
-        Tower.__init__(self, self, cell)
+cells_g = []
 
-    def rta(self, enangl):      # Tower-enemy rotate Δ function  TODO: Optimalizuj
-        if self.rtangl < enangl:    # If angle to enemy is higher than tower's
-            if self.rtangl - enangl > 180:
-                return 360 - (self.rtangl - enangl)
-            else:
-                return enangl - self.rtangl
-        elif self.rtangl == enangl:     # Else if they are the same, return 0
-            return 0
-        else:   # Else tower's angle is higher than to enemy
-            if self.rtangl - enangl < -180:
-                return 360 + self.rtangl - enangl
-            else:
-                return self.rtangl - enangl
-
-
-for i in range(1, 6):
-    cells.append(Cell([1, 2*i+1]))
-    cells.append(Cell([5, 2*i + 2]))
 
 def update():
-    for cell in cells:
+    for cell in cells_g:
         if cell.tower != 0:
             target = cell.tower.target_first()
             cell.tower.rotate_and_shoot(cell.tower.rta(target), cell.tower.target_first(target))
 
 
+for i in range(1, 6):
+    cells_g.append(Cell([1, 2*i+1]))
+    cells_g.append(Cell([5, 2*i + 2]))
+
 c = Cell([5, 5])
 c.build_tower_basic()
-waves.append(Wave([Regular(0), Regular(1), Regular(2), Regular(3)], 0))
+waves_g.append(Wave([Regular(0), Regular(1), Regular(2), Regular(3)], 0))
+print("")
