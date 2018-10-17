@@ -1,19 +1,31 @@
 import math
 
-coins = 200
-road_g = [[5, 3], [7, 3], [7, 5], [7, 7], [5, 7], [3, 7], [3, 5], [3, 3], [5, 3]]
-cells = []
-waves = []
-tickrate: int = 100
+
+class Wave:
+    def __init__(self, enemies, number):
+        self.enemies = enemies
+        self.number = number
+
+    def print(self):
+        for enemy in self.enemies:
+            print('|', self.number, enemy.wave_rank, enemy.hp, enemy.effects.__len__())
+
+    def update(self):
+        count = 0
+        for enemy in self.enemies:
+            if not enemy.update():
+                del self.enemies[count]
+            count += 1
 
 
 class Enemy:        # Parent for enemy type classes
     pos = 0         # ++ in every loop
 
-    def __init__(self, hp, speed):
+    def __init__(self, hp, speed, wave_rank):
         self.effects = []  # Clear array for effects
         self.hp = hp
         self.speed = speed
+        self.wave_rank = wave_rank
 
     def get_pos(self, road):    # Enemy.pos convert to Cartesian  TODO: catch error out of index for end of a road
         half = self.pos/2
@@ -59,68 +71,16 @@ class Enemy:        # Parent for enemy type classes
         # Update for effects
         j = 0
         for effect in self.effects:
-            if effect.update(self):
+            if effect.update():
                 del self.effects[j]
         j += 1
+        return not self.hp <= 0
 
 
 class Regular(Enemy):
     # Regular enemy has 100 hp and 1 speed
-    def __init__(self):
-        Enemy.__init__(self, 100, 1)
-
-
-class Cell:
-    # Class for place, where tower can stand
-    def __init__(self, pos, upgrades=0):
-        self.pos = pos
-        self.upgrades = upgrades
-        self.tower = 0
-
-
-class Tower:
-    def __init__(self, child):
-        self.child = child
-
-    def shoot(self, enemy, cell):
-        enemy.addeff(Bullet(self.child.dmg, (math.sqrt((cell.pos[0] - enemy.get_pos(road_g)[0])**2 + (cell.pos[1] - enemy.get_pos(road_g)[1])**2)/self.child.prspd), enemy))
-
-    def rotate_and_shoot(self, angl, enemy, cell):     # Rotate tower by given amount
-        if math.fabs(angl) < self.child.rtspd / tickrate:   # If angl is less than tick rotation speed
-            self.child.rtangl += angl   # Rotate rest of the way
-            self.shoot(enemy, cell) # Shoot the enemy
-        else:
-            if angl == 0:   # Raise exception if angle to rotate is 0
-                raise ValueError('Rotation Δ zero!')
-                pass
-            # Else if angl is positive, rotate by max speed to + else to -
-            self.child.rtangl += self.child.rtspd / tickrate if angl > 0 else -(self.child.rtspd / tickrate)
-
-
-class Basic(Tower):        # Tower in cell
-    rng = 4         # Basic tower properties
-    dmg = 10
-    atspd = 5
-    rtspd = 100
-    rtangl = 0
-    prspd = 4
-
-    def __init__(self):
-        Tower.__init__(self, self)
-
-    def rtt(self, enangl):      # Tower-enemy rotate Δ function  TODO: Optimalizuj
-        if self.rtangl < enangl:    # If angle to enemy is higher than tower's
-            if self.rtangl - enangl > 180:
-                return 360 - (self.rtangl - enangl)
-            else:
-                return enangl - self.rtangl
-        elif self.rtangl == enangl:     # Else if they are the same, return 0
-            return 0
-        else:   # Else tower's angle is higher than to enemy
-            if self.rtangl - enangl < -180:
-                return 360 + self.rtangl - enangl
-            else:
-                return self.rtangl - enangl
+    def __init__(self, wave_rank=-1):
+        Enemy.__init__(self, 100, 1, wave_rank)
 
 
 class Bullet:                   # Bullet effect for shots   # TODO: Make parent class
@@ -139,14 +99,114 @@ class Bullet:                   # Bullet effect for shots   # TODO: Make parent 
         return False
 
 
-for i in range(1, 6):
-    cells.append(Cell([1, 2*i+1]))
-    cells.append(Cell([5, 2*i + 2]))
+class Tower:
+    def __init__(self, child, cell):
+        self.child = child
+        self.cell = cell
+        self.cd = 0
+
+    def dist(self, enemy):
+        enpos = enemy.get_pos(road_g)
+        return math.sqrt((self.cell.pos[0] - enpos[0])**2 + (self.cell.pos[1] - enpos[1])**2)
+
+    def shoot(self, enemy):
+        enemy.addeff(Bullet(self.child.dmg, self.dist(enemy)/self.child.prspd, enemy))
+
+    def rotate_and_shoot(self, angl, enemy):     # Rotate tower by given amount
+        if math.fabs(angl) < self.child.rtspd / tickrate:   # If angl is less than tick rotation speed
+            self.child.rtangl += angl   # Rotate rest of the way
+            if self.cd <= 0:
+                self.shoot(enemy)     # Shoot the enemy
+                self.cd = tickrate/self.child.atspd - 1
+            else:
+                self.cd -= 1
+        else:
+            if angl == 0:   # Raise exception if angle to rotate is 0
+                raise ValueError('Rotation Δ zero!')
+                pass
+            # Else if angl is positive, rotate by max speed to + else to -
+            self.child.rtangl += self.child.rtspd / tickrate if angl > 0 else -(self.child.rtspd / tickrate)
+
+    def rta(self, enangl):      # Tower-enemy rotate Δ function  TODO: Optimalizuj
+        if self.child.rtangl < enangl:    # If angle to enemy is higher than tower's
+            if self.child.rtangl - enangl > 180:
+                return 360 - (self.child.rtangl - enangl)
+            else:
+                return enangl - self.child.rtangl
+        elif self.child.rtangl == enangl:     # Else if they are the same, return 0
+            return 0
+        else:   # Else tower's angle is higher than to enemy
+            if self.child.rtangl - enangl < -180:
+                return 360 + self.child.rtangl - enangl
+            else:
+                return self.child.rtangl - enangl
+
+    def in_range(self, enemy):
+        return self.dist(enemy) <= self.child.rng
+
+    def target_first(self, waves):      # TODO: Multiplication of wave and enemy ranks or something like that
+        target = Regular(10000)
+        for wave in waves:
+            for enemy in wave.enemies:
+                if self.in_range(enemy) and enemy.wave_rank < target.wave_rank:
+                    target = enemy
+        return target
+
+
+class Basic(Tower):        # Tower in cell
+    rng = 4         # Basic tower properties
+    dmg = 10
+    atspd = 5
+    rtspd = 100
+    rtangl = 0
+    prspd = 4
+
+    def __init__(self, cell):
+        Tower.__init__(self, self, cell)
+
+
+class Cell:
+    # Class for place, where tower can stand
+    def __init__(self, pos, upgrades=0):
+        self.pos = pos
+        self.upgrades = upgrades
+        self.tower: Tower = 0
+
+    def build_tower_basic(self):
+        self.tower = Basic(self)
+
+    def update(self):
+        if self.tower != 0:
+            target = self.tower.target_first(waves_g)
+            print('|', self.tower.rta(target.enemy_angle(self)))
+            self.tower.rotate_and_shoot(self.tower.rta(target.enemy_angle(self)), target)
+
 
 def update():
-    for wave in waves:
+    for cell in cells_g:
+        cell.update()
+    for wave in waves_g:
+        wave.update()
 
-c = Cell([5, 5])
-c.tower = Basic()
-e = Regular()
-e.pos = 1
+
+coins = 200
+road_g = [[5, 3], [7, 3], [7, 5], [7, 7], [5, 7], [3, 7], [3, 5], [3, 3], [5, 3]]
+waves_g = []
+cells_g = [Cell([5, 5])]
+tickrate: int = 100
+currtick = 0
+
+for i in range(1, 6):
+    cells_g.append(Cell([1, 2*i+1]))
+    cells_g.append(Cell([5, 2*i + 2]))
+
+cells_g[0].build_tower_basic()
+waves_g.append(Wave([Regular(0), Regular(1), Regular(2), Regular(3)], 0))
+print("")
+
+while True:
+    print('-------------')
+    print('#' + str(currtick))
+    update()
+    waves_g[0].print()
+    currtick += 1
