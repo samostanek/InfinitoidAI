@@ -1,15 +1,18 @@
 import math
 
-coins = 200
-road_g = [[5, 3], [7, 3], [7, 5], [7, 7], [5, 7], [3, 7], [3, 5], [3, 3], [5, 3]]
-waves_g = []
-tickrate: int = 100
-
 
 class Wave:
     def __init__(self, enemies, number):
         self.enemies = enemies
         self.number = number
+
+    def print(self):
+        for enemy in self.enemies:
+            print(self.number, enemy.wave_rank, enemy.hp, enemy.effects.__len__())
+
+    def update(self):
+        for enemy in self.enemies:
+            enemy.update()
 
 
 class Enemy:        # Parent for enemy type classes
@@ -85,6 +88,7 @@ class Bullet:                   # Bullet effect for shots   # TODO: Make parent 
 
     def update(self):
         self.t -= 1     # Lower remaining time of effect
+        print(self.t)
         if self.t <= 0:     # If time has passed
             self.host.hp -= self.dmg    # Execute effect's effect
             # Return True if Bullet needs to be deleted
@@ -132,12 +136,13 @@ class Tower:
     def in_range(self, enemy):
         return self.dist(enemy) <= self.child.rng
 
-    def target_first(self, waves):
+    def target_first(self, waves):      # TODO: Multiplication of wave and enemy ranks or something like that
         target = Regular(10000)
         for wave in waves:
             for enemy in wave.enemies:
                 if self.in_range(enemy) and enemy.wave_rank < target.wave_rank:
                     target = enemy
+        return target
 
 
 class Basic(Tower):        # Tower in cell
@@ -157,27 +162,40 @@ class Cell:
     def __init__(self, pos, upgrades=0):
         self.pos = pos
         self.upgrades = upgrades
-        self.tower = 0
+        self.tower: Tower = 0
 
     def build_tower_basic(self):
         self.tower = Basic(self)
 
-
-cells_g = []
+    def update(self):
+        if self.tower != 0:
+            target = self.tower.target_first(waves_g)
+            print(self.tower.rta(target.enemy_angle(self)))
+            self.tower.rotate_and_shoot(self.tower.rta(target.enemy_angle(self)), target)
 
 
 def update():
     for cell in cells_g:
-        if cell.tower != 0:
-            target = cell.tower.target_first()
-            cell.tower.rotate_and_shoot(cell.tower.rta(target), cell.tower.target_first(target))
+        cell.update()
+    for wave in waves_g:
+        wave.update()
+    waves_g[0].print()
 
+
+coins = 200
+road_g = [[5, 3], [7, 3], [7, 5], [7, 7], [5, 7], [3, 7], [3, 5], [3, 3], [5, 3]]
+waves_g = []
+cells_g = [Cell([5, 5])]
+tickrate: int = 100
 
 for i in range(1, 6):
     cells_g.append(Cell([1, 2*i+1]))
     cells_g.append(Cell([5, 2*i + 2]))
 
-c = Cell([5, 5])
-c.build_tower_basic()
+cells_g[0].build_tower_basic()
 waves_g.append(Wave([Regular(0), Regular(1), Regular(2), Regular(3)], 0))
 print("")
+
+while True:
+    update()
+    waves_g[0].print()
