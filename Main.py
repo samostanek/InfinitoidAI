@@ -8,11 +8,14 @@ class Wave:
 
     def print(self):
         for enemy in self.enemies:
-            print(self.number, enemy.wave_rank, enemy.hp, enemy.effects.__len__())
+            print('|', self.number, enemy.wave_rank, enemy.hp, enemy.effects.__len__())
 
     def update(self):
+        count = 0
         for enemy in self.enemies:
-            enemy.update()
+            if not enemy.update():
+                del self.enemies[count]
+            count += 1
 
 
 class Enemy:        # Parent for enemy type classes
@@ -68,9 +71,10 @@ class Enemy:        # Parent for enemy type classes
         # Update for effects
         j = 0
         for effect in self.effects:
-            if effect.update(self):
+            if effect.update():
                 del self.effects[j]
         j += 1
+        return not self.hp <= 0
 
 
 class Regular(Enemy):
@@ -88,7 +92,6 @@ class Bullet:                   # Bullet effect for shots   # TODO: Make parent 
 
     def update(self):
         self.t -= 1     # Lower remaining time of effect
-        print(self.t)
         if self.t <= 0:     # If time has passed
             self.host.hp -= self.dmg    # Execute effect's effect
             # Return True if Bullet needs to be deleted
@@ -100,6 +103,7 @@ class Tower:
     def __init__(self, child, cell):
         self.child = child
         self.cell = cell
+        self.cd = 0
 
     def dist(self, enemy):
         enpos = enemy.get_pos(road_g)
@@ -111,7 +115,11 @@ class Tower:
     def rotate_and_shoot(self, angl, enemy):     # Rotate tower by given amount
         if math.fabs(angl) < self.child.rtspd / tickrate:   # If angl is less than tick rotation speed
             self.child.rtangl += angl   # Rotate rest of the way
-            self.shoot(enemy)     # Shoot the enemy
+            if self.cd <= 0:
+                self.shoot(enemy)     # Shoot the enemy
+                self.cd = tickrate/self.child.atspd - 1
+            else:
+                self.cd -= 1
         else:
             if angl == 0:   # Raise exception if angle to rotate is 0
                 raise ValueError('Rotation Δ zero!')
@@ -170,7 +178,7 @@ class Cell:
     def update(self):
         if self.tower != 0:
             target = self.tower.target_first(waves_g)
-            print(self.tower.rta(target.enemy_angle(self)))
+            print('|', self.tower.rta(target.enemy_angle(self)))
             self.tower.rotate_and_shoot(self.tower.rta(target.enemy_angle(self)), target)
 
 
@@ -179,7 +187,6 @@ def update():
         cell.update()
     for wave in waves_g:
         wave.update()
-    waves_g[0].print()
 
 
 coins = 200
@@ -187,6 +194,7 @@ road_g = [[5, 3], [7, 3], [7, 5], [7, 7], [5, 7], [3, 7], [3, 5], [3, 3], [5, 3]
 waves_g = []
 cells_g = [Cell([5, 5])]
 tickrate: int = 100
+currtick = 0
 
 for i in range(1, 6):
     cells_g.append(Cell([1, 2*i+1]))
@@ -197,5 +205,8 @@ waves_g.append(Wave([Regular(0), Regular(1), Regular(2), Regular(3)], 0))
 print("")
 
 while True:
+    print('-------------')
+    print('#' + str(currtick))
     update()
     waves_g[0].print()
+    currtick += 1
