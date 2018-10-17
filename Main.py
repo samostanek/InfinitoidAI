@@ -6,16 +6,19 @@ class Wave:
         self.enemies = enemies
         self.number = number
 
-    def print(self):
+    def print(self, cell):
         for enemy in self.enemies:
-            print('|', self.number, enemy.wave_rank, enemy.hp, enemy.effects.__len__())
+            print('|', self.number, enemy.wave_rank, enemy.hp, enemy.effects.__len__(), enemy.get_pos(road_g), enemy.enemy_angle(cell))
 
     def update(self):
         count = 0
+        if not self.enemies:
+            return True
         for enemy in self.enemies:
             if not enemy.update():
                 del self.enemies[count]
             count += 1
+        return False
 
 
 class Enemy:        # Parent for enemy type classes
@@ -56,12 +59,9 @@ class Enemy:        # Parent for enemy type classes
                 return 90
         atan = math.degrees(math.atan(dy/dx))
         if dx < 0:
-            if atan < 0:
-                return 360 - atan
-            else:
-                return atan
+            return atan
         else:
-            return 180 + atan
+            return atan - 180
 
     def addeff(self, effect):
         # Function for addition of effects
@@ -139,7 +139,7 @@ class Tower:
             if self.child.rtangl - enangl < -180:
                 return 360 + self.child.rtangl - enangl
             else:
-                return self.child.rtangl - enangl
+                return enangl - self.child.rtangl
 
     def in_range(self, enemy):
         return self.dist(enemy) <= self.child.rng
@@ -183,10 +183,16 @@ class Cell:
 
 
 def update():
+    count = 0
     for cell in cells_g:
         cell.update()
     for wave in waves_g:
-        wave.update()
+        if wave.update():
+            del waves_g[count]
+        count += 1
+    if not waves_g:
+        return True
+    return False
 
 
 coins = 200
@@ -205,8 +211,11 @@ waves_g.append(Wave([Regular(0), Regular(1), Regular(2), Regular(3)], 0))
 print("")
 
 while True:
+    if currtick == 801:
+        print('debug')
     print('-------------')
     print('#' + str(currtick))
-    update()
-    waves_g[0].print()
+    if update():
+        break
+    waves_g[0].print(cells_g[0])
     currtick += 1
