@@ -1,10 +1,17 @@
 import math
+import time
 
+lif = 100
 
 class Wave:
-    def __init__(self, enemies, number):
-        self.enemies = enemies
+    def __init__(self, number, qty = 0, type = 0, density = 0.5):
+        self.enemies = []
         self.number = number
+        self.qty = qty
+        self.type = type
+        self.density = density
+        self.spawned = 0
+        self.gcd = 0
 
     def print(self, cell):
         for enemy in self.enemies:
@@ -12,6 +19,7 @@ class Wave:
 
     def update(self):
         count = 0
+        self.init()
         if not self.enemies:
             return True
         for enemy in self.enemies:
@@ -19,6 +27,17 @@ class Wave:
                 del self.enemies[count]
             count += 1
         return False
+
+    def init(self):
+        if self.spawned < self.qty:
+            if self.gcd == 0:
+                self.enemies.append(Regular(self.spawned))
+                self.gcd = self.density*self.enemies[0].speed*tickrate - 1
+                self.spawned += 1
+            else:
+                self.gcd -= 1
+
+
 
 
 class Enemy:        # Parent for enemy type classes
@@ -68,12 +87,18 @@ class Enemy:        # Parent for enemy type classes
         self.effects.append(effect)
 
     def update(self):
+        global lif
         # Update for effects
         j = 0
         for effect in self.effects:
             if effect.update():
                 del self.effects[j]
         j += 1
+        self.pos += self.speed/tickrate
+        if self.pos >= (len(road_g) - 1) * 2:
+            lif -= 1
+            print()
+            return False
         return not self.hp <= 0
 
 
@@ -156,10 +181,10 @@ class Tower:
 class Basic(Tower):        # Tower in cell
     rng = 4         # Basic tower properties
     dmg = 10
-    atspd = 5
+    atspd = 10
     rtspd = 100
     rtangl = 0
-    prspd = 4
+    prspd = 10
 
     def __init__(self, cell):
         Tower.__init__(self, self, cell)
@@ -196,7 +221,7 @@ def update():
 
 
 coins = 200
-road_g = [[5, 3], [7, 3], [7, 5], [7, 7], [5, 7], [3, 7], [3, 5], [3, 3], [5, 3]]
+road_g = [[5, 3], [7, 3], [7, 5], [7, 7], [5, 7], [3, 7], [3, 5], [3, 3]]
 waves_g = []
 cells_g = [Cell([5, 5])]
 tickrate: int = 100
@@ -207,15 +232,16 @@ for i in range(1, 6):
     cells_g.append(Cell([5, 2*i + 2]))
 
 cells_g[0].build_tower_basic()
-waves_g.append(Wave([Regular(0), Regular(1), Regular(2), Regular(3)], 0))
+waves_g.append(Wave(0, 10, 0, 0.5))
 print("")
 
 while True:
-    if currtick == 801:
-        print('debug')
+    if currtick == 200:
+        print('')
     print('-------------')
     print('#' + str(currtick))
     if update():
         break
     waves_g[0].print(cells_g[0])
-    currtick += 1
+    print('| Life:', lif)
+    currtick += 1 
