@@ -238,7 +238,7 @@ waves_g.append(Wave(0, 10, 0, 0.5))
 print("")
 
 while True:
-    render(0)
+    render({'cs': coins, 'rg': road_g, 'wsg': waves_g, 'clsg': cells_g, 'tickrate': tickrate, 'currt': currtick})
     if currtick == 200:
         print('')
     print('-------------')
