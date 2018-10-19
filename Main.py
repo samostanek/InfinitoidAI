@@ -1,5 +1,5 @@
 import math
-import time
+import Visualisation
 
 lif = 100
 
