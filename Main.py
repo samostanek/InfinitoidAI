@@ -1,5 +1,5 @@
-import math
 import time
+import math
 
 lif = 100
 
@@ -13,9 +13,11 @@ class Wave:
         self.spawned = 0
         self.gcd = 0
 
-    def print(self, cell):
+    def print(self):
+        i = 0
         for enemy in self.enemies:
-            print('|', self.number, enemy.wave_rank, enemy.hp, enemy.effects.__len__(), enemy.get_pos(road_g), enemy.enemy_angle(cell))
+            i += enemy.hp
+        print('|', 'N:' + str(self.number), 'HP:' + str(i/qty) + '%', '(' + str(len(self.enemies)) + '/' + str(self.qty) +')')
 
     def update(self):
         count = 0
@@ -97,7 +99,6 @@ class Enemy:        # Parent for enemy type classes
         self.pos += self.speed/tickrate
         if self.pos >= (len(road_g) - 1) * 2:
             lif -= 1
-            print()
             return False
         return not self.hp <= 0
 
@@ -197,51 +198,108 @@ class Cell:
         self.upgrades = upgrades
         self.tower: Tower = 0
 
-    def build_tower_basic(self):
-        self.tower = Basic(self)
-
     def update(self):
         if self.tower != 0:
             target = self.tower.target_first(waves_g)
-            print('|', self.tower.rta(target.enemy_angle(self)))
             self.tower.rotate_and_shoot(self.tower.rta(target.enemy_angle(self)), target)
+
+    def print(self):
+        if self.tower != 0:
+            print('|', self.pos, math.floor(self.tower.cd), math.floor(self.tower.child.rtangl))
+
+def buildTower(pos, type=Basic):
+    built = False
+    for cell in cells_g:
+        if cell.pos == pos:
+            cell.tower = type(cell)
+            print('Done!')
+            built = True
+    if not built:
+        print('No cell!')
 
 
 def update():
-    count = 0
+    waveGen()
     for cell in cells_g:
         cell.update()
+    count = 0
     for wave in waves_g:
         if wave.update():
             del waves_g[count]
         count += 1
     if not waves_g:
         return True
+    if lif <= 0:
+        return True
     return False
 
-
-coins = 200
-road_g = [[5, 3], [7, 3], [7, 5], [7, 7], [5, 7], [3, 7], [3, 5], [3, 3]]
-waves_g = []
-cells_g = [Cell([5, 5])]
-tickrate: int = 100
-currtick = 0
-
-for i in range(1, 6):
-    cells_g.append(Cell([1, 2*i+1]))
-    cells_g.append(Cell([5, 2*i + 2]))
-
-cells_g[0].build_tower_basic()
-waves_g.append(Wave(0, 10, 0, 0.5))
-print("")
-
-while True:
-    if currtick == 200:
-        print('')
+def globalUpdate():
+    global currtick, end
     print('-------------')
     print('#' + str(currtick))
     if update():
-        break
-    waves_g[0].print(cells_g[0])
+        end = True
+    print('|Towers:')
+    for cell in cells_g:
+        cell.print()
+    print('|Waves:')
+    for wave in waves_g:
+        wave.print()
     print('| Life:', lif)
-    currtick += 1 
+    currtick += 1
+
+
+def waveGen():
+    global wavenum, wcd
+    if wcd == 0:
+        waves_g.append(Wave(wavenum, qty, 0))
+        wavenum += 1
+        wcd = waverate
+    else:
+        wcd -= 1
+
+
+coins = 200
+road_g = [[7, 3], [9, 3], [11, 3], [11, 5], [11, 7], [11, 9], [9, 9], [7, 9], [7, 11], [7, 13],
+          [9, 13], [11, 13], [13, 13], [15, 13], [15, 11], [15, 9], [15, 7], [17, 7], [19, 7], [19, 9],
+          [19, 11], [19, 13], [19, 15], [19, 17], [17, 17], [15, 17], [13, 17], [11, 17], [9, 17], [7, 17],
+          [5, 17], [3, 17], [3, 15], [3, 13], [3, 11], [3, 9], [3, 7], [3, 5], [5, 5]]
+waves_g = []
+cells_g = [Cell([13, 1]), Cell([3, 3]), Cell([5, 3]), Cell([1, 5]), Cell([7, 5]),
+           Cell([9, 5]), Cell([17, 5]), Cell([13, 7]), Cell([21, 7]), Cell([5, 7]),
+           Cell([7, 7]), Cell([9, 7]), Cell([1, 9]), Cell([5, 9]), Cell([13, 9]),
+           Cell([17, 9]), Cell([5, 11]), Cell([9, 11]), Cell([11, 11]), Cell([13, 11]),
+           Cell([17, 11]), Cell([1, 13]), Cell([5, 13]), Cell([17, 13]), Cell([5, 15]),
+           Cell([7, 15]), Cell([9, 15]), Cell([11, 15]), Cell([13, 15]), Cell([15, 15]),
+           Cell([17, 15]), Cell([21, 15]), Cell([1, 17]), Cell([5, 19]), Cell([11, 19]), Cell([17, 19])]
+tickrate = 100
+waverate = tickrate*20
+wcd = 0
+wavenum = 0
+currtick = 0
+passrate = 0
+inp = 0
+qty = int(input("Number of enemies in the wave:"))
+end = False
+
+print("")
+
+while True:
+    inp = input('>').split()
+    cmd = inp[0]
+    if cmd == 'pass':
+        for i in range (0, int(inp[1])):
+            globalUpdate()
+            if end:
+                break
+    elif cmd == 'end':
+        while (True):
+            globalUpdate()
+            if end:
+                break
+    elif cmd == 'build':
+        buildTower([int(inp[1]), int(inp[2])])
+    if end:
+        break
+
+print ('Got waves:', wavenum)
