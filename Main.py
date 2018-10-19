@@ -1,5 +1,5 @@
 import math
-import Visualisation
+from Visualisation import *
 
 lif = 100
 
@@ -227,6 +227,8 @@ cells_g = [Cell([5, 5])]
 tickrate: int = 100
 currtick = 0
 
+graphics_init()
+
 for i in range(1, 6):
     cells_g.append(Cell([1, 2*i+1]))
     cells_g.append(Cell([5, 2*i + 2]))
@@ -236,6 +238,7 @@ waves_g.append(Wave(0, 10, 0, 0.5))
 print("")
 
 while True:
+    render(0)
     if currtick == 200:
         print('')
     print('-------------')
