@@ -1,28 +1,27 @@
 import time
 import math
+import random
 
 lif = 100
 
 class Wave:
-    def __init__(self, number, qty = 0, type = 0, density = 0.5):
+    def __init__(self, number, multi, qty = 0, type = 0, density = 0.5):
         self.enemies = []
         self.number = number
         self.qty = qty
         self.type = type
         self.density = density
+        self.multi = multi
         self.spawned = 0
         self.gcd = 0
 
     def print(self):
-        i = 0
-        for enemy in self.enemies:
-            i += enemy.hp
-        print('|', 'N:' + str(self.number), 'HP:' + str(i/qty) + '%', '(' + str(len(self.enemies)) + '/' + str(self.qty) +')')
+        print('|', 'N:' + str(self.number), '(' + str(len(self.enemies)) + '/' + str(self.qty) +')')
 
     def update(self):
         count = 0
         self.init()
-        if not self.enemies:
+        if not self.enemies and self.spawned == self.qty:
             return True
         for enemy in self.enemies:
             if not enemy.update():
@@ -89,24 +88,25 @@ class Enemy:        # Parent for enemy type classes
         self.effects.append(effect)
 
     def update(self):
-        global lif
+        global lif, coins
         # Update for effects
-        j = 0
-        for effect in self.effects:
-            if effect.update():
+        for j in range(len(self.effects) - 1, -1, -1):
+            if self.effects[j].update():
                 del self.effects[j]
-        j += 1
         self.pos += self.speed/tickrate
         if self.pos >= (len(road_g) - 1) * 2:
             lif -= 1
             return False
-        return not self.hp <= 0
+        if self.hp <= 0:
+            coins += 5
+            return False
+        return True
 
 
 class Regular(Enemy):
     # Regular enemy has 100 hp and 1 speed
     def __init__(self, wave_rank=-1):
-        Enemy.__init__(self, 100, 1, wave_rank)
+        Enemy.__init__(self, 100*multiply, 1, wave_rank)
 
 
 class Bullet:                   # Bullet effect for shots   # TODO: Make parent class
@@ -117,9 +117,11 @@ class Bullet:                   # Bullet effect for shots   # TODO: Make parent 
         self.host = host        # Enemy object, on which effect is applied
 
     def update(self):
+        global damageDealt
         self.t -= 1     # Lower remaining time of effect
         if self.t <= 0:     # If time has passed
-            self.host.hp -= self.dmg    # Execute effect's effect
+            self.host.hp -= self.dmg   # Execute effect's effect
+            damageDealt += self.dmg
             # Return True if Bullet needs to be deleted
             return True
         return False
@@ -208,14 +210,19 @@ class Cell:
             print('|', self.pos, math.floor(self.tower.cd), math.floor(self.tower.child.rtangl))
 
 def buildTower(pos, type=Basic):
+    global coins
     built = False
-    for cell in cells_g:
-        if cell.pos == pos:
-            cell.tower = type(cell)
-            print('Done!')
-            built = True
-    if not built:
-        print('No cell!')
+    if coins >= 50:
+        for cell in cells_g:
+            if cell.pos == pos:
+                cell.tower = type(cell)
+                coins -= 50
+                print('Done!')
+                built = True
+        if not built:
+            print('No cell!')
+    else:
+        print('No money - no honey!')
 
 
 def update():
@@ -227,14 +234,13 @@ def update():
         if wave.update():
             del waves_g[count]
         count += 1
-    if not waves_g:
-        return True
     if lif <= 0:
         return True
     return False
 
 def globalUpdate():
-    global currtick, end
+    ticktime = time.time()
+    global currtick, end, t, samo
     print('-------------')
     print('#' + str(currtick))
     if update():
@@ -245,16 +251,34 @@ def globalUpdate():
     print('|Waves:')
     for wave in waves_g:
         wave.print()
-    print('| Life:', lif)
+    print('|Life:', lif)
+    print('|Coins:', coins)
+    if lif >= 100:
+        rand = random.randrange(1000000)
+    elif lif > 75:
+        rand = random.randrange(100000)
+    elif lif > 40:
+        rand = random.randrange(10000)
+    elif lif > 10:
+        rand = random.randrange(1000)
+    elif lif > 5:
+        rand = random.randrange(100)
+    else:
+        rand = random.randrange(10)
+    if rand == 0 and samo == False:
+        print('Samuel je debil (nie)')
+        samo = True
+    t += time.time() - ticktime
     currtick += 1
 
 
 def waveGen():
-    global wavenum, wcd
+    global wavenum, wcd, multiply
     if wcd == 0:
-        waves_g.append(Wave(wavenum, qty, 0))
+        waves_g.append(Wave(wavenum, multiply, qty, 0))
         wavenum += 1
         wcd = waverate
+        multiply += multiplier
     else:
         wcd -= 1
 
@@ -272,6 +296,10 @@ cells_g = [Cell([13, 1]), Cell([3, 3]), Cell([5, 3]), Cell([1, 5]), Cell([7, 5])
            Cell([17, 11]), Cell([1, 13]), Cell([5, 13]), Cell([17, 13]), Cell([5, 15]),
            Cell([7, 15]), Cell([9, 15]), Cell([11, 15]), Cell([13, 15]), Cell([15, 15]),
            Cell([17, 15]), Cell([21, 15]), Cell([1, 17]), Cell([5, 19]), Cell([11, 19]), Cell([17, 19])]
+t = 0
+samo = False
+multiply = 1
+multiplier = float(input('Multiplier:')) - 1
 tickrate = 100
 waverate = tickrate*20
 wcd = 0
@@ -282,7 +310,7 @@ inp = 0
 qty = int(input("Number of enemies in the wave:"))
 end = False
 
-print("")
+damageDealt = 0
 
 while True:
     inp = input('>').split()
@@ -299,7 +327,13 @@ while True:
                 break
     elif cmd == 'build':
         buildTower([int(inp[1]), int(inp[2])])
+    elif cmd == 'money':
+        print(coins)
     if end:
         break
 
-print ('Got waves:', wavenum)
+print('Got waves:', wavenum)
+print('Damage dealt:', damageDealt)
+print('Time:', math.floor(t))
+print('Timerate', math.floor(currtick/t))
+print('Samo', samo)
