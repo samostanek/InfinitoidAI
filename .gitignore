@@ -9,3 +9,4 @@
 *.xml
 *.xml
 *.iml
+__pycache__/Visualisation.cpython-37.pyc

@@ -1,6 +1,7 @@
 import time
 import math
 import random
+from Visualisation import *
 
 lif = 100
 
@@ -47,6 +48,7 @@ class Enemy:        # Parent for enemy type classes
     def __init__(self, hp, speed, wave_rank):
         self.effects = []  # Clear array for effects
         self.hp = hp
+        self.maxhp = hp
         self.speed = speed
         self.wave_rank = wave_rank
 
@@ -132,12 +134,14 @@ class Tower:
         self.child = child
         self.cell = cell
         self.cd = 0
+        self.rdsht = 0
 
     def dist(self, enemy):
         enpos = enemy.get_pos(road_g)
         return math.sqrt((self.cell.pos[0] - enpos[0])**2 + (self.cell.pos[1] - enpos[1])**2)
 
     def shoot(self, enemy):
+        self.rdsht = enemy
         enemy.addeff(Bullet(self.child.dmg, self.dist(enemy)/self.child.prspd, enemy))
 
     def rotate_and_shoot(self, angl, enemy):     # Rotate tower by given amount
@@ -310,9 +314,28 @@ inp = 0
 qty = int(input("Number of enemies in the wave:"))
 end = False
 
-damageDealt = 0
+graphics_init()
+
+for i in range(1, 6):
+    cells_g.append(Cell([1, 2*i+1]))
+    cells_g.append(Cell([5, 2*i + 2]))
+
+cells_g[0].build_tower_basic()
+waves_g.append(Wave(0, 10, 0, 0.5))
+print("")
 
 while True:
+    render({'cs': coins, 'rg': road_g, 'wsg': waves_g, 'clsg': cells_g, 'tickrate': tickrate, 'currt': currtick})
+    if currtick == 200:
+        print('')
+    print('-------------')
+    print('#' + str(currtick))
+    if update():
+damageDealt = 0
+graphics_init()
+
+while True:
+    render({'cs': coins, 'rg': road_g, 'wsg': waves_g, 'clsg': cells_g, 'tickrate': tickrate, 'currt': currtick})
     inp = input('>').split()
     cmd = inp[0]
     if cmd == 'pass':
