@@ -46,6 +46,7 @@ class Enemy:        # Parent for enemy type classes
     def __init__(self, hp, speed, wave_rank):
         self.effects = []  # Clear array for effects
         self.hp = hp
+        self.maxhp = hp
         self.speed = speed
         self.wave_rank = wave_rank
 
@@ -129,12 +130,14 @@ class Tower:
         self.child = child
         self.cell = cell
         self.cd = 0
+        self.rdsht = 0
 
     def dist(self, enemy):
         enpos = enemy.get_pos(road_g)
         return math.sqrt((self.cell.pos[0] - enpos[0])**2 + (self.cell.pos[1] - enpos[1])**2)
 
     def shoot(self, enemy):
+        self.rdsht = enemy
         enemy.addeff(Bullet(self.child.dmg, self.dist(enemy)/self.child.prspd, enemy))
 
     def rotate_and_shoot(self, angl, enemy):     # Rotate tower by given amount
