@@ -1,6 +1,4 @@
-import time
-import math
-import random
+import time, math, random
 from Visualisation import *
 
 lif = 100
@@ -34,13 +32,10 @@ class Wave:
         if self.spawned < self.qty:
             if self.gcd == 0:
                 self.enemies.append(Regular(self.spawned))
-                self.gcd = self.density*self.enemies[0].speed*tickrate - 1
+                self.gcd = self.density*tickrate/self.enemies[0].speed - 1
                 self.spawned += 1
             else:
                 self.gcd -= 1
-
-
-
 
 class Enemy:        # Parent for enemy type classes
     pos = 0         # ++ in every loop
@@ -191,7 +186,7 @@ class Basic(Tower):        # Tower in cell
     atspd = 10
     rtspd = 100
     rtangl = 0
-    prspd = 10
+    prspd = 100
 
     def __init__(self, cell):
         Tower.__init__(self, self, cell)
@@ -243,8 +238,9 @@ def update():
     return False
 
 def globalUpdate():
+    time.sleep(0.005)
     ticktime = time.time()
-    global currtick, end, t, samo
+    global currtick, end, t, samo, coins, road_g, waves_g, cells_g, tickrate
     print('-------------')
     print('#' + str(currtick))
     if update():
@@ -272,6 +268,7 @@ def globalUpdate():
     if rand == 0 and samo == False:
         print('Samuel je debil (nie)')
         samo = True
+    render({'cs': coins, 'rg': road_g, 'wsg': waves_g, 'clsg': cells_g, 'tickrate': tickrate, 'currt': currtick})
     t += time.time() - ticktime
     currtick += 1
 
@@ -317,7 +314,7 @@ damageDealt = 0
 graphics_init()
 
 while True:
-    render({'cs': coins, 'rg': road_g, 'wsg': waves_g, 'clsg': cells_g, 'tickrate': tickrate, 'currt': currtick})
+
     inp = input('>').split()
     cmd = inp[0]
     if cmd == 'pass':

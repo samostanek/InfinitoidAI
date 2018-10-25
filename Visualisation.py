@@ -7,7 +7,7 @@ screen = 0
 def graphics_init():
     global screen
     pg.init()
-    screen = pg.display.set_mode((400, 300))
+    screen = pg.display.set_mode((800, 800))
 
 def render(gamestat, k=30):
     # Gamestat dictionary keys: cs - coins, rg - road_g, wsg - waves_g, clsg - cells_g, tickrate, currt - current tick
@@ -16,7 +16,6 @@ def render(gamestat, k=30):
             pg.quit()
 
     pg.draw.aalines(screen, (0, 255, 0), False, list(map(lambda x: tuple(map(lambda y: (y+0.5)*k, x)), gamestat['rg'])))
-
     for wave in gamestat['wsg']:
         for e in wave.enemies:
             epos = e.get_pos(gamestat['rg'])
@@ -25,8 +24,10 @@ def render(gamestat, k=30):
                            int(k / 4))
 
     for cell in gamestat['clsg']:
-        pg.draw.rect(screen, (100, 100, 255), pg.Rect(cell.pos[0] * k, cell.pos[1] * k, k, k))
-        pg.draw.rect(screen, (0, 0, 0), pg.Rect(cell.pos[0] * k, cell.pos[1] * k, k, k), int(k/16))
+        k2 = 2*k
+        cpos = list(map(lambda x: (x - 0.5) * k, cell.pos))
+        pg.draw.rect(screen, (100, 100, 255), pg.Rect(cpos[0], cpos[1], k2, k2))
+        pg.draw.rect(screen, (0, 0, 0), pg.Rect(cpos[0], cpos[1], k2, k2), int(k/16))
         if cell.tower:
             pg.draw.circle(screen, (255, 0, 255), (int(cell.pos[0]*k + 0.5*k), int(cell.pos[1]*k + 0.5*k)), int(k/4))
 
