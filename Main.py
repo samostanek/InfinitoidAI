@@ -144,7 +144,7 @@ class Tower:
             self.child.rtangl += angl   # Rotate rest of the way
             if self.cd <= 0:
                 self.shoot(enemy)     # Shoot the enemy
-                self.cd = tickrate/self.child.atspd - 1
+                self.cd =  math.floor(tickrate/self.child.atspd - 1)
             else:
                 self.cd -= 1
         else:
@@ -153,6 +153,8 @@ class Tower:
                 pass
             # Else if angl is positive, rotate by max speed to + else to -
             self.child.rtangl += self.child.rtspd / tickrate if angl > 0 else -(self.child.rtspd / tickrate)
+            if self.cd > 0:
+                self.cd -= 1
 
     def rta(self, enangl):      # Tower-enemy rotate Δ function  TODO: Optimalizuj
         if self.child.rtangl < enangl:    # If angle to enemy is higher than tower's
@@ -173,20 +175,24 @@ class Tower:
 
     def target_first(self, waves):      # TODO: Multiplication of wave and enemy ranks or something like that
         target = Regular(10000)
+        choose = False
         for wave in waves:
             for enemy in wave.enemies:
                 if self.in_range(enemy) and enemy.wave_rank < target.wave_rank:
                     target = enemy
-        return target
+                    choose = True
+        if choose:
+            return target
+        return 0
 
 
 class Basic(Tower):        # Tower in cell
-    rng = 4         # Basic tower properties
-    dmg = 10
-    atspd = 10
+    rng = 6         # Basic tower properties
+    dmg = 70
+    atspd = 3
     rtspd = 100
     rtangl = 0
-    prspd = 100
+    prspd = 10
 
     def __init__(self, cell):
         Tower.__init__(self, self, cell)
@@ -202,7 +208,10 @@ class Cell:
     def update(self):
         if self.tower != 0:
             target = self.tower.target_first(waves_g)
-            self.tower.rotate_and_shoot(self.tower.rta(target.enemy_angle(self)), target)
+            if target != 0:
+                self.tower.rotate_and_shoot(self.tower.rta(target.enemy_angle(self)), target)
+            elif self.tower.cd > 0:
+                self.tower.cd -= 1
 
     def print(self):
         if self.tower != 0:
@@ -302,7 +311,7 @@ samo = False
 multiply = 1
 multiplier = float(input('Multiplier:')) - 1
 tickrate = 100
-waverate = tickrate*20
+waverate = tickrate*30
 wcd = 0
 wavenum = 0
 currtick = 0

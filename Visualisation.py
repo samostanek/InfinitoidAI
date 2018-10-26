@@ -1,13 +1,13 @@
 import pygame as pg
-import cmath
+import cmath, math
 
 screen = 0
-
+size = 800
 
 def graphics_init():
     global screen
     pg.init()
-    screen = pg.display.set_mode((800, 800))
+    screen = pg.display.set_mode((size, size))
 
 def render(gamestat, k=30):
     # Gamestat dictionary keys: cs - coins, rg - road_g, wsg - waves_g, clsg - cells_g, tickrate, currt - current tick
@@ -29,7 +29,12 @@ def render(gamestat, k=30):
         pg.draw.rect(screen, (100, 100, 255), pg.Rect(cpos[0], cpos[1], k2, k2))
         pg.draw.rect(screen, (0, 0, 0), pg.Rect(cpos[0], cpos[1], k2, k2), int(k/16))
         if cell.tower:
-            pg.draw.circle(screen, (255, 0, 255), (int(cell.pos[0]*k + 0.5*k), int(cell.pos[1]*k + 0.5*k)), int(k/4))
+            cdclr = cell.tower.cd/(math.floor(gamestat['tickrate']/cell.tower.atspd - 1))*255
+            pg.draw.circle(screen, (cdclr, 255-cdclr, 0), (int(cell.pos[0]*k + 0.5*k), int(cell.pos[1]*k + 0.5*k)), int(k/4))
+            pg.draw.circle(screen, (0, 0, 0), (int(cell.pos[0]*k + 0.5*k), int(cell.pos[1]*k + 0.5*k)), int(k*cell.tower.child.rng), int(k/16))
 
     pg.display.flip()
     screen.fill((255, 255, 255))
+
+def shootrender(cell, enemy, road_g, k=30):
+    pg.draw.aaline(screen, (0, 0, 0), (int(cell.pos[0]*k + 0.5*k), int(cell.pos[1]*k + 0.5*k)), (int(enemy.get_pos(road_g)[0]*k + 0.5*k), int(enemy.get_pos(road_g)[1]*k + 0.5*k)))
