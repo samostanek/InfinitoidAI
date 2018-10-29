@@ -1,21 +1,23 @@
-import time, math, random
+import time
+import random
 from Visualisation import *
 
 lif = 100
 
+
 class Wave:
-    def __init__(self, number, multi, qty = 0, type = 0, density = 0.5):
+    def __init__(self, number, multi, eqty=0, wtype=0, density=0.5):
         self.enemies = []
         self.number = number
-        self.qty = qty
-        self.type = type
+        self.qty = eqty
+        self.type = wtype
         self.density = density
         self.multi = multi
         self.spawned = 0
         self.gcd = 0
 
     def print(self):
-        print('|', 'N:' + str(self.number), '(' + str(len(self.enemies)) + '/' + str(self.qty) +')')
+        print('|', 'N:' + str(self.number), '(' + str(len(self.enemies)) + '/' + str(self.qty) + ')')
 
     def update(self):
         count = 0
@@ -36,6 +38,7 @@ class Wave:
                 self.spawned += 1
             else:
                 self.gcd -= 1
+
 
 class Enemy:        # Parent for enemy type classes
     pos = 0         # ++ in every loop
@@ -107,10 +110,10 @@ class Regular(Enemy):
 
 
 class Bullet:                   # Bullet effect for shots   # TODO: Make parent class
-    def __init__(self, dmg, t, host):
+    def __init__(self, dmg, duration, host):
         # Duration input in secs converted to ticks
         self.dmg = dmg
-        self.t = t * tickrate
+        self.t = duration * tickrate
         self.host = host        # Enemy object, on which effect is applied
 
     def update(self):
@@ -144,7 +147,7 @@ class Tower:
             self.child.rtangl += angl   # Rotate rest of the way
             if self.cd <= 0:
                 self.shoot(enemy)     # Shoot the enemy
-                self.cd =  math.floor(tickrate/self.child.atspd - 1)
+                self.cd = math.floor(tickrate/self.child.atspd - 1)
             else:
                 self.cd -= 1
         else:
@@ -217,13 +220,14 @@ class Cell:
         if self.tower != 0:
             print('|', self.pos, math.floor(self.tower.cd), math.floor(self.tower.child.rtangl))
 
-def buildTower(pos, type=Basic):
+
+def build_tower(pos, ttype=Basic):
     global coins
     built = False
     if coins >= 50:
         for cell in cells_g:
             if cell.pos == pos:
-                cell.tower = type(cell)
+                cell.tower = ttype(cell)
                 coins -= 50
                 print('Done!')
                 built = True
@@ -234,7 +238,7 @@ def buildTower(pos, type=Basic):
 
 
 def update():
-    waveGen()
+    wave_gen()
     for cell in cells_g:
         cell.update()
     count = 0
@@ -246,7 +250,8 @@ def update():
         return True
     return False
 
-def globalUpdate():
+
+def gu():
     time.sleep(0.005)
     ticktime = time.time()
     global currtick, end, t, samo, coins, road_g, waves_g, cells_g, tickrate
@@ -274,7 +279,7 @@ def globalUpdate():
         rand = random.randrange(100)
     else:
         rand = random.randrange(10)
-    if rand == 0 and samo == False:
+    if rand == 0 and not samo:
         print('Samuel je debil (nie)')
         samo = True
     render({'cs': coins, 'rg': road_g, 'wsg': waves_g, 'clsg': cells_g, 'tickrate': tickrate, 'currt': currtick})
@@ -282,7 +287,7 @@ def globalUpdate():
     currtick += 1
 
 
-def waveGen():
+def wave_gen():
     global wavenum, wcd, multiply
     if wcd == 0:
         waves_g.append(Wave(wavenum, multiply, qty, 0))
@@ -327,17 +332,15 @@ while True:
     inp = input('>').split()
     cmd = inp[0]
     if cmd == 'pass':
-        for i in range (0, int(inp[1])):
-            globalUpdate()
+        for i in range(0, int(inp[1])):
+            gu()
             if end:
                 break
     elif cmd == 'end':
-        while (True):
-            globalUpdate()
-            if end:
-                break
+        while not end:
+            gu()
     elif cmd == 'build':
-        buildTower([int(inp[1]), int(inp[2])])
+        build_tower([int(inp[1]), int(inp[2])])
     elif cmd == 'money':
         print(coins)
     if end:
