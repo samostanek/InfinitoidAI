@@ -1,5 +1,4 @@
 import time
-import random
 from Visualisation import *
 
 lif = 100
@@ -131,6 +130,7 @@ class Tower:
     def __init__(self, child, cell):
         self.child = child
         self.cell = cell
+        self.incd = math.floor(tickrate/self.child.atspd - 1)
         self.cd = 0
         self.rdsht = 0
 
@@ -147,7 +147,7 @@ class Tower:
             self.child.rtangl += angl   # Rotate rest of the way
             if self.cd <= 0:
                 self.shoot(enemy)     # Shoot the enemy
-                self.cd = math.floor(tickrate/self.child.atspd - 1)
+                self.cd = self.incd
             else:
                 self.cd -= 1
         else:
@@ -177,16 +177,13 @@ class Tower:
         return self.dist(enemy) <= self.child.rng
 
     def target_first(self, waves):      # TODO: Multiplication of wave and enemy ranks or something like that
-        target = Regular(10000)
+        target = 0
         choose = False
         for wave in waves:
             for enemy in wave.enemies:
-                if self.in_range(enemy) and enemy.wave_rank < target.wave_rank:
+                if self.in_range(enemy) and (not target or enemy.wave_rank < target.wave_rank):
                     target = enemy
-                    choose = True
-        if choose:
-            return target
-        return 0
+        return target
 
 
 class Basic(Tower):        # Tower in cell
@@ -209,7 +206,7 @@ class Cell:
         self.tower: Tower = 0
 
     def update(self):
-        if self.tower != 0:
+        if self.tower:
             target = self.tower.target_first(waves_g)
             if target != 0:
                 self.tower.rotate_and_shoot(self.tower.rta(target.enemy_angle(self)), target)
@@ -254,7 +251,7 @@ def update():
 def gu():
     time.sleep(0.005)
     ticktime = time.time()
-    global currtick, end, t, samo, coins, road_g, waves_g, cells_g, tickrate
+    global currtick, end, t, coins, road_g, waves_g, cells_g, tickrate
     print('-------------')
     print('#' + str(currtick))
     if update():
@@ -267,21 +264,6 @@ def gu():
         wave.print()
     print('|Life:', lif)
     print('|Coins:', coins)
-    if lif >= 100:
-        rand = random.randrange(1000000)
-    elif lif > 75:
-        rand = random.randrange(100000)
-    elif lif > 40:
-        rand = random.randrange(10000)
-    elif lif > 10:
-        rand = random.randrange(1000)
-    elif lif > 5:
-        rand = random.randrange(100)
-    else:
-        rand = random.randrange(10)
-    if rand == 0 and not samo:
-        print('Samuel je debil (nie)')
-        samo = True
     render({'cs': coins, 'rg': road_g, 'wsg': waves_g, 'clsg': cells_g, 'tickrate': tickrate, 'currt': currtick})
     t += time.time() - ticktime
     currtick += 1
@@ -312,7 +294,6 @@ cells_g = [Cell([13, 1]), Cell([3, 3]), Cell([5, 3]), Cell([1, 5]), Cell([7, 5])
            Cell([7, 15]), Cell([9, 15]), Cell([11, 15]), Cell([13, 15]), Cell([15, 15]),
            Cell([17, 15]), Cell([21, 15]), Cell([1, 17]), Cell([5, 19]), Cell([11, 19]), Cell([17, 19])]
 t = 0
-samo = False
 multiply = 1
 multiplier = float(input('Multiplier:')) - 1
 tickrate = 100
@@ -350,4 +331,3 @@ print('Got waves:', wavenum)
 print('Damage dealt:', damageDealt)
 print('Time:', math.floor(t))
 print('Timerate', math.floor(currtick/t))
-print('Samo', samo)
