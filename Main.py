@@ -326,8 +326,10 @@ while True:
         print(coins)
     if end:
         break
-
-print('Got waves:', wavenum)
-print('Damage dealt:', damageDealt)
-print('Time:', math.floor(t))
-print('Timerate', math.floor(currtick/t))
+    if currtick != 0:
+        print()
+        print('Got waves:', wavenum)
+        print('Damage dealt:', damageDealt)
+        print('Time:', math.floor(t))
+        print('Timerate', math.floor(currtick/t))
+        print()
