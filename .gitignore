@@ -10,3 +10,11 @@
 *.xml
 *.iml
 __pycache__/Visualisation.cpython-37.pyc
+
+application.windows32/*
+application.windows64/java
+application.windows64/source
+application.windows64/lib/jogl-all.jar
+application.windows64/lib/jogl-all-natives-windows-amd64.jar
+application.windows64/lib/gluegen-rt.jar
+application.windows64/lib/gluegen-rt-natives-windows-amd64.jar
