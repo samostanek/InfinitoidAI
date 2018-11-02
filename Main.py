@@ -1,4 +1,5 @@
 import time
+import subprocess
 from Visualisation import *
 
 lif = 100
@@ -264,7 +265,10 @@ def gu():
         wave.print()
     print('|Life:', lif)
     print('|Coins:', coins)
+
     render({'cs': coins, 'rg': road_g, 'wsg': waves_g, 'clsg': cells_g, 'tickrate': tickrate, 'currt': currtick})
+    p.stdin.write(str(coins).encode())
+
     t += time.time() - ticktime
     currtick += 1
 
@@ -306,10 +310,11 @@ inp = 0
 qty = int(input("Number of enemies in the wave:"))
 end = False
 damageDealt = 0
+
 graphics_init()
+p = subprocess.Popen(["java", "-jar", "Visualisation.jar"], stdin=subprocess.PIPE)
 
 while True:
-
     inp = input('>').split()
     cmd = inp[0]
     if cmd == 'pass':
