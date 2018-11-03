@@ -8,12 +8,13 @@ void setup() {
     fill(255, 0, 0);
     ellipse(100, 100, 100, 100);
     String s = br.readLine();
-    System.out.println("RENDER: ");
-    fill(0, 255, 0);
-    ellipse(100, 100, 100, 100);
-    s = br.readLine();
+    while (!s.equals("x")) {
+      System.out.println("RENDER: got input: " + s);
+      s = br.readLine();
+    }
     System.out.println("RUNTIME: Processing render subprocess terminated.");
   } catch(IOException e) {
     e.printStackTrace();
   }
+  exit();
 }

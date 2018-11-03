@@ -267,7 +267,8 @@ def gu():
     print('|Coins:', coins)
 
     render({'cs': coins, 'rg': road_g, 'wsg': waves_g, 'clsg': cells_g, 'tickrate': tickrate, 'currt': currtick})
-    p.stdin.write(str(coins).encode())
+    p.stdin.write(b"a\r\n")
+    p.stdin.flush()
 
     t += time.time() - ticktime
     currtick += 1
