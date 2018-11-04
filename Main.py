@@ -267,7 +267,8 @@ def gu():
     print('|Coins:', coins)
 
     render({'cs': coins, 'rg': road_g, 'wsg': waves_g, 'clsg': cells_g, 'tickrate': tickrate, 'currt': currtick})
-    p.stdin.write(b"a\r\n")
+    p.stdin.write((str(coins) + " " + str(road_g) + " " + str(waves_g) + " " + str(cells_g) + " " + str(tickrate)
+                   + " " + str(currtick) + "\r\n").encode())
     p.stdin.flush()
 
     t += time.time() - ticktime
@@ -330,6 +331,8 @@ while True:
         build_tower([int(inp[1]), int(inp[2])])
     elif cmd == 'money':
         print(coins)
+    else:
+        print('Unknown command')
     if end:
         break
     if currtick != 0:
